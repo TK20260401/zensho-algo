@@ -32,7 +32,7 @@ export default function CalcQuiz({ onAnswer }: CalcQuizProps) {
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const [state, setState] = useState<QuizState>("answering");
   const [stats, setStats] = useState({ total: 0, correct: 0, streak: 0, bestStreak: 0 });
-  const [shuffled, setShuffled] = useState(false);
+  const [shuffled, setShuffled] = useState(true);
   const [skippedIndices, setSkippedIndices] = useState<Set<number>>(new Set());
   const [showSkippedList, setShowSkippedList] = useState(false);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
@@ -210,23 +210,10 @@ export default function CalcQuiz({ onAnswer }: CalcQuizProps) {
         </button>
       </div>
 
-      {/* バッチ or カテゴリ選択 — 横スクロール対応 */}
+      {/* カテゴリ選択 — 横スクロール対応 */}
+      {filterMode === "category" && (
       <div className="tab-scroll justify-center" role="group" aria-label="出題範囲の選択">
-        {filterMode === "batch"
-          ? currentBatches.map((b, i) => (
-              <button
-                key={i}
-                onClick={() => changeBatch(i)}
-                className={`flex-shrink-0 px-3 py-2 rounded-lg text-sm font-bold transition-all ${
-                  batchIndex === i
-                    ? "bg-emerald-700 text-white shadow"
-                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                }`}
-              >
-                {b.label}
-              </button>
-            ))
-          : allCategories.map((cat) => (
+        {allCategories.map((cat) => (
               <button
                 key={cat}
                 onClick={() => changeCategory(cat)}
@@ -240,6 +227,7 @@ export default function CalcQuiz({ onAnswer }: CalcQuizProps) {
               </button>
             ))}
       </div>
+      )}
 
       {/* スコア + 進捗 + タイマー */}
       <div className="flex flex-wrap gap-2 justify-center text-xs sm:text-sm">

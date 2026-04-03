@@ -10,9 +10,9 @@
 
 | Project | Description | URL | Status |
 | --- | --- | --- | --- |
-| [IPAS-Master](./ipas-master/) | ITパスポート試験対策アプリ（500問ドリル・シミュレーター・用語フラッシュ・認証・学習履歴） | https://ipas-master.vercel.app | v8 |
+| [IPAS-Master](./ipas-master/) | ITパスポート試験対策アプリ（500問ドリル・シミュレーター・用語フラッシュ・認証・学習履歴） | https://ipas-master.vercel.app | v9 |
 | [Logic-Riichi](./logic-riichi/) | 麻雀アルゴリズム学習アプリ（待ち牌クイズ・コード実装問題・認証・統計） | https://logic-riichi.vercel.app | v30 |
-| [Zensho-Algo](https://github.com/TK20260401/zensho-algo) | 全商情報処理検定 プログラミング部門 アルゴリズム・トレーナー | — | 構築中 |
+| [Zensho-Algo](https://github.com/TK20260401/zensho-algo) | 全商情報処理検定 プログラミング部門 アルゴリズム・トレーナー | https://zensho-algo.vercel.app | MVP |
 | [todo-app](./todo-app/) | シンプルTODO Webアプリ（HTML/CSS/JS） | — | v1 |
 | [Blueprint](./20260401-Project-Blueprint%201st/) | プロジェクト設計書・構想ドキュメント | — | — |
 
@@ -198,9 +198,9 @@ Phase 4: 深化（予定）
 | 2026-04-01 | — | — | 設計書作成、統合リポジトリ・個別リポジトリの初期化 |
 | 2026-04-02 | IPAS-Master | v1-v4 | 初期構築、損益分岐点シミュレーター、2進数変換ツール、用語フラッシュ（45語）、計算問題ドリル（30問） |
 | 2026-04-02 | Logic-Riichi | v1-v28 | 初期構築、牌ビジュアル、クイズ機能、UD全面改修、アルゴリズム問題、Supabase連携、レスポンシブ |
-| 2026-04-03 | IPAS-Master | v5-v8 | 500問拡充、UD/QRコード、GitHub OAuth認証、Supabase学習履歴、レーダーチャート（3系統/14分野）、訪問者カウンター、30/50/100問モード、タイマー、スキップ復帰機能 |
+| 2026-04-03 | IPAS-Master | v5-v9 | 500問拡充、UD/QRコード、GitHub OAuth認証、Supabase学習履歴、レーダーチャート（3系統/14分野）、訪問者カウンター、30/50/100問モード、タイマー、スキップ復帰、シャッフルデフォルトON |
 | 2026-04-03 | Logic-Riichi | v29-v30 | Supabase Auth認証UI、訪問者カウンター、学習履歴、レーダーチャート、ユーザーランキング |
-| 2026-04-03 | Zensho-Algo | — | リポジトリ作成、Next.jsプロジェクト初期化 |
+| 2026-04-03 | Zensho-Algo | MVP | 疑似言語エディタ+トレース表+ステップ実行、サンプル4本（合計・最大値・偶数合計・バブルソート）、Vercelデプロイ |
 
 ## インフラ
 
