@@ -184,7 +184,7 @@ export default function CalcQuiz({ onAnswer }: CalcQuizProps) {
                 : "bg-gray-100 text-gray-700 hover:bg-gray-200"
             }`}
           >
-            {size}<R b="問" r="もん" /><R b="単位" r="たんい" />
+            {size}<R b="問" r="もん" />
           </button>
         ))}
         <button
