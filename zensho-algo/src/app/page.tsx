@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import PseudoEditor from "@/components/PseudoEditor";
 import TraceTable from "@/components/TraceTable";
+import VariableVisualizer from "@/components/VariableVisualizer";
 import { execute, type TraceEntry } from "@/lib/interpreter";
 import { samplePrograms } from "@/lib/samplePrograms";
 
@@ -13,23 +14,83 @@ export default function Home() {
   const [stepIndex, setStepIndex] = useState(0);
   const [allTrace, setAllTrace] = useState<TraceEntry[]>([]);
   const [isRunning, setIsRunning] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [speed, setSpeed] = useState(500); // ms per step
+  const playTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const stepIndexRef = useRef(0);
+  const allTraceRef = useRef<TraceEntry[]>([]);
+
+  // 自動再生ループ
+  useEffect(() => {
+    if (!isPlaying) {
+      if (playTimerRef.current) clearTimeout(playTimerRef.current);
+      return;
+    }
+
+    const tick = () => {
+      const idx = stepIndexRef.current;
+      const traceData = allTraceRef.current;
+      if (idx < traceData.length) {
+        setTrace(traceData.slice(0, idx + 1));
+        setCurrentStep(idx);
+        stepIndexRef.current = idx + 1;
+        setStepIndex(idx + 1);
+        playTimerRef.current = setTimeout(tick, speed);
+      } else {
+        setIsPlaying(false);
+        setIsRunning(false);
+        setCurrentStep(undefined);
+      }
+    };
+
+    playTimerRef.current = setTimeout(tick, speed);
+    return () => {
+      if (playTimerRef.current) clearTimeout(playTimerRef.current);
+    };
+  }, [isPlaying, speed]);
 
   const handleRun = useCallback(() => {
     const result = execute(code);
     setTrace(result);
     setAllTrace(result);
+    allTraceRef.current = result;
     setCurrentStep(undefined);
     setStepIndex(0);
+    stepIndexRef.current = 0;
     setIsRunning(false);
+    setIsPlaying(false);
   }, [code]);
+
+  const handleAnimate = useCallback(() => {
+    const result = execute(code);
+    setAllTrace(result);
+    allTraceRef.current = result;
+    setTrace(result.slice(0, 1));
+    setCurrentStep(0);
+    setStepIndex(1);
+    stepIndexRef.current = 1;
+    setIsRunning(true);
+    setIsPlaying(true);
+  }, [code]);
+
+  const handlePause = useCallback(() => {
+    setIsPlaying(false);
+  }, []);
+
+  const handleResume = useCallback(() => {
+    setIsPlaying(true);
+  }, []);
 
   const handleStepStart = useCallback(() => {
     const result = execute(code);
     setAllTrace(result);
+    allTraceRef.current = result;
     setTrace(result.slice(0, 1));
     setCurrentStep(0);
     setStepIndex(1);
+    stepIndexRef.current = 1;
     setIsRunning(true);
+    setIsPlaying(false);
   }, [code]);
 
   const handleStepNext = useCallback(() => {
@@ -37,6 +98,7 @@ export default function Home() {
       setTrace(allTrace.slice(0, stepIndex + 1));
       setCurrentStep(stepIndex);
       setStepIndex(stepIndex + 1);
+      stepIndexRef.current = stepIndex + 1;
     } else {
       setIsRunning(false);
       setCurrentStep(undefined);
@@ -46,9 +108,12 @@ export default function Home() {
   const handleReset = useCallback(() => {
     setTrace([]);
     setAllTrace([]);
+    allTraceRef.current = [];
     setCurrentStep(undefined);
     setStepIndex(0);
+    stepIndexRef.current = 0;
     setIsRunning(false);
+    setIsPlaying(false);
   }, []);
 
   const handleSampleChange = (idx: number) => {
@@ -89,9 +154,6 @@ export default function Home() {
               </option>
             ))}
           </select>
-          <span className="text-xs text-slate-500 hidden sm:inline">
-            {samplePrograms.find((_, i) => i === 0)?.description}
-          </span>
         </div>
 
         {/* 2カラムレイアウト */}
@@ -105,48 +167,97 @@ export default function Home() {
               highlightLine={highlightLine}
             />
 
-            {/* 実行ボタン */}
-            <div className="flex gap-2">
+            {/* 実行ボタン群 */}
+            <div className="flex flex-wrap gap-2">
               <button
                 onClick={handleRun}
-                className="px-5 py-2.5 bg-emerald-600 text-white rounded-lg font-bold text-sm
+                className="px-4 py-2.5 bg-emerald-600 text-white rounded-lg font-bold text-sm
                            hover:bg-emerald-700 active:scale-95 transition-all shadow"
               >
-                ▶ 実行
+                ▶ 一括実行
               </button>
               {!isRunning ? (
+                <>
+                  <button
+                    onClick={handleAnimate}
+                    className="px-4 py-2.5 bg-orange-500 text-white rounded-lg font-bold text-sm
+                               hover:bg-orange-600 active:scale-95 transition-all shadow"
+                  >
+                    ▶ アニメ再生
+                  </button>
+                  <button
+                    onClick={handleStepStart}
+                    className="px-4 py-2.5 bg-sky-600 text-white rounded-lg font-bold text-sm
+                               hover:bg-sky-700 active:scale-95 transition-all shadow"
+                  >
+                    1歩ずつ
+                  </button>
+                </>
+              ) : isPlaying ? (
                 <button
-                  onClick={handleStepStart}
-                  className="px-5 py-2.5 bg-sky-600 text-white rounded-lg font-bold text-sm
-                             hover:bg-sky-700 active:scale-95 transition-all shadow"
+                  onClick={handlePause}
+                  className="px-4 py-2.5 bg-amber-500 text-white rounded-lg font-bold text-sm
+                             hover:bg-amber-600 active:scale-95 transition-all shadow"
                 >
-                  ▶▶ ステップ開始
+                  ⏸ 一時停止
                 </button>
               ) : (
-                <button
-                  onClick={handleStepNext}
-                  disabled={stepIndex >= allTrace.length}
-                  className={`px-5 py-2.5 rounded-lg font-bold text-sm transition-all shadow ${
-                    stepIndex >= allTrace.length
-                      ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                      : "bg-sky-600 text-white hover:bg-sky-700 active:scale-95"
-                  }`}
-                >
-                  ▶▶ 次のステップ ({stepIndex}/{allTrace.length})
-                </button>
+                <>
+                  <button
+                    onClick={handleResume}
+                    className="px-4 py-2.5 bg-orange-500 text-white rounded-lg font-bold text-sm
+                               hover:bg-orange-600 active:scale-95 transition-all shadow"
+                  >
+                    ▶ 再開
+                  </button>
+                  <button
+                    onClick={handleStepNext}
+                    disabled={stepIndex >= allTrace.length}
+                    className={`px-4 py-2.5 rounded-lg font-bold text-sm transition-all shadow ${
+                      stepIndex >= allTrace.length
+                        ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                        : "bg-sky-600 text-white hover:bg-sky-700 active:scale-95"
+                    }`}
+                  >
+                    次の1歩 ({stepIndex}/{allTrace.length})
+                  </button>
+                </>
               )}
               <button
                 onClick={handleReset}
-                className="px-5 py-2.5 bg-slate-500 text-white rounded-lg font-bold text-sm
+                className="px-4 py-2.5 bg-slate-500 text-white rounded-lg font-bold text-sm
                            hover:bg-slate-600 active:scale-95 transition-all shadow"
               >
                 ↺ リセット
               </button>
             </div>
+
+            {/* 速度スライダー */}
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <label className="text-xs font-bold text-slate-500 whitespace-nowrap">速度:</label>
+                <span className="text-xs text-slate-400">速い</span>
+                <input
+                  type="range"
+                  min={100}
+                  max={2000}
+                  step={100}
+                  value={speed}
+                  onChange={(e) => setSpeed(parseInt(e.target.value))}
+                  className="flex-1 accent-orange-500"
+                />
+                <span className="text-xs text-slate-400">遅い</span>
+              </div>
+              <div className="text-center text-xs font-mono text-slate-500">
+                {speed}ms / ステップ
+              </div>
+            </div>
           </div>
 
-          {/* 右: トレース表 */}
-          <div className="space-y-3">
+          {/* 右: ビジュアライゼーション + トレース表 */}
+          <div className="space-y-4">
+            <h2 className="text-sm font-bold text-slate-600">変数ビジュアライズ</h2>
+            <VariableVisualizer trace={trace} currentStep={currentStep} />
             <h2 className="text-sm font-bold text-slate-600">トレース表</h2>
             <TraceTable trace={trace} currentStep={currentStep} />
           </div>

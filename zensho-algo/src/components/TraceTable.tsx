@@ -25,9 +25,6 @@ export default function TraceTable({ trace, currentStep }: Props) {
   }
   const sortedVars = Array.from(varNames).sort();
 
-  // 出力を収集
-  const outputs = trace.filter((e) => e.output != null).map((e) => e.output);
-
   return (
     <div className="space-y-3">
       {/* トレース表 */}
@@ -73,15 +70,6 @@ export default function TraceTable({ trace, currentStep }: Props) {
         </table>
       </div>
 
-      {/* 出力欄 */}
-      {outputs.length > 0 && (
-        <div className="bg-slate-800 text-green-400 rounded-xl p-4 font-mono text-sm">
-          <p className="text-xs text-slate-400 mb-1">出力:</p>
-          {outputs.map((o, i) => (
-            <div key={i}>{o}</div>
-          ))}
-        </div>
-      )}
     </div>
   );
 }
