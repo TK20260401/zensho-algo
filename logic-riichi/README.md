@@ -139,9 +139,10 @@ NEXT_PUBLIC_SUPABASE_URL=https://xxxxx.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=sb_publishable_xxxxx
 ```
 
-Supabase SQL Editorで `scores` テーブルを作成:
+Supabase SQL Editorでテーブルを作成:
 
 ```sql
+-- スコアテーブル
 create table scores (
   id uuid default gen_random_uuid() primary key,
   created_at timestamptz default now(),
@@ -149,11 +150,24 @@ create table scores (
   quiz_type text not null,
   is_correct boolean not null,
   time_left integer,
-  session_id text not null
+  session_id text not null,
+  user_id uuid references auth.users(id)
 );
 alter table scores enable row level security;
 create policy "Insert" on scores for insert with check (true);
 create policy "Select" on scores for select using (true);
+create index idx_scores_user_id on scores(user_id);
+create index idx_scores_difficulty on scores(difficulty);
+
+-- 訪問者テーブル
+create table visitors (
+  id uuid default gen_random_uuid() primary key,
+  visited_at timestamptz default now(),
+  visitor_id text not null
+);
+alter table visitors enable row level security;
+create policy "Public insert visitors" on visitors for insert with check (true);
+create policy "Public select visitors" on visitors for select using (true);
 ```
 
 起動:
@@ -169,6 +183,14 @@ Vercelへのデプロイ:
 vercel --prod
 ```
 
+## DBスキーマ
+
+| テーブル | カラム | 用途 |
+| --- | --- | --- |
+| `scores` | id, created_at, difficulty, quiz_type, is_correct, time_left, session_id, user_id | クイズ回答結果の永続化 |
+| `visitors` | id, visited_at, visitor_id | 訪問者カウント（1日1回/ブラウザ） |
+| `auth.users` | (Supabase Auth管理) | メール/パスワード認証 |
+
 ## 拡張ロードマップ
 
 - Algorithm Visualizer: 牌のソートアニメーション
@@ -176,7 +198,6 @@ vercel --prod
 - AI対局アノテーション: 打牌ログのAI分析
 - 資格試験クイズ連携: 情報I・AP過去問との統合
 - アクセシビリティ・レイヤー: 視線・スイッチ操作対応
-- ユーザー別学習履歴: 認証ユーザーの端末横断スコア管理
 
 ## ライセンス
 
