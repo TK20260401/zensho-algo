@@ -1,0 +1,150 @@
+# Logic-Riichi（ロジリーチ）Education Edition
+
+**麻雀を解くことで情報学的素養を身につける、教育版麻雀プラットフォーム**
+
+本番URL: <https://logic-riichi.vercel.app>
+
+## 目的
+
+麻雀の対局を「問題解決のシミュレーション」と定義し、初心者が挫折する複雑なルールをAIが「論理的ステップ」に分解して提示する。ゲーミフィケーション（スコア・連続正解・難易度段階）により学習動機を維持しながら、SDL（Self-Directed Learning: 自己主導型学習）のサイクルで「情報I」の計算モデルや「FE/AP」のアルゴリズムを自律的に体得することを目指す。
+
+## コンセプト
+
+「教育版桃鉄」や「マイクラ」に並ぶ教育版麻雀として、システムコンポーネントの役割を「教育的メカニズム」に全振りした設計。単なる「麻雀ができるアプリ」ではなく、「麻雀を解くことで情報学的素養を身につける学習OS」として位置づける。
+
+- **ゲーミフィケーション**: 正解率・連続正解・最高記録のリアルタイム表示、難易度段階（Easy/Standard/Hard）による達成感の設計
+- **SDL（自己主導型学習）**: 答えではなくヒント・ガイドを提供し、学習者が自ら思考・試行するプロセスを重視。再認法→再生法の段階的な足場外しで自走力を育成
+
+## システムコンポーネント
+
+| コンポーネント | 役割 | 習得スキル |
+| :--- | :--- | :--- |
+| Algorithm Visualizer | 牌の整列プロセスをアニメーション表示し、ソートロジックを可視化 | ソートアルゴリズム（情報I） |
+| Logic Analyzer | 14枚を「4面子+1雀頭」に分解する全探索を実行し、最短のアガリを論理演算 | 再帰処理・多次元配列（FE科目B） |
+| Probabilistic Simulator | 放銃確率やツモ期待値をリアルタイムで数値化・グラフ化 | モデル化とシミュレーション（情報I） |
+| AI Learning Scaffold | 答えではなく「論理的なヒント」を生成し、自走学習を支援 | 自走自律学習（SDL） |
+| Learning Trace DB | 思考時間・エラー傾向をSupabaseに蓄積し、弱点分析レポートを自動生成 | データサイエンス・統計分析 |
+
+## 現在の実装状況（v28）
+
+### 待ち牌クイズ
+
+13枚の手牌から待ち牌を当てるクイズ。回答後にアガリ形の解説を表示。
+
+| 難易度 | 制限時間 | ヒント | 手牌ハイライト |
+| :--- | :--- | :--- | :--- |
+| Easy | 3分 | ガイド充実 | あり（色分け） |
+| Standard | 2分 | 少しヒント | なし |
+| Hard | 1分 | なし | なし |
+
+### アルゴリズム実装問題
+
+待ち牌計算のコードを読み解く問題。心理学の記憶想起の測定法に基づく難易度設計。
+
+| 難易度 | 形式 | ガイド | 学習法 |
+| :--- | :--- | :--- | :--- |
+| Easy | 選択肢 | あり | 再認法 |
+| Standard | 虫食い入力 | あり | 再認法 |
+| Hard | 自由記述 | なし | 再生法 |
+
+> 再認法: 選択肢から正解を見つける手法。再生法: ヒントなしで自ら記述・言語化する手法。一般的に再認法は再生法よりも容易で、記憶の検索効率が高いとされている。
+
+### アクセシビリティ・UD対応
+
+- 全漢字にルビ（ふりがな）付き
+- 牌画像に詳細なalt属性（WCAG AA以上）
+- 視覚障害者・高齢者向けの大きめUI
+- キーボード操作・スクリーンリーダー対応
+- レスポンシブ対応（モバイル・タブレット）
+- 「アガリとは？」の丁寧なビジュアル説明
+
+### スコア管理
+
+- 個別正答数のsumで正解率を計算（四捨五入）
+- 連続正解・最高記録をリアルタイム更新
+- Supabaseに全回答結果を永続化
+
+## 技術スタック
+
+| レイヤー | 技術 | 役割 |
+| :--- | :--- | :--- |
+| Frontend | Next.js 16 (TypeScript) + Tailwind CSS | 親しみやすいUIとレスポンシブ対応 |
+| Backend/DB | Supabase (PostgreSQL, RLS) | スコア・学習ログの永続化 |
+| AI Engine | Claude Code | 教育的コーチングの実装と開発支援 |
+| Infrastructure | Vercel | 学校・塾の端末から即座にアクセス可能なWeb配信基盤 |
+| 牌画像 | [FluffyStuff/riichi-mahjong-tiles](https://github.com/FluffyStuff/riichi-mahjong-tiles) | CC0（パブリックドメイン） |
+
+## 再現手順
+
+```bash
+git clone https://github.com/TK20260401/logic-riichi.git
+cd logic-riichi
+npm install
+```
+
+`.env.local` を作成し、Supabaseの認証情報を設定:
+
+```text
+NEXT_PUBLIC_SUPABASE_URL=https://xxxxx.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=sb_publishable_xxxxx
+```
+
+Supabase SQL Editorで `scores` テーブルを作成:
+
+```sql
+create table scores (
+  id uuid default gen_random_uuid() primary key,
+  created_at timestamptz default now(),
+  difficulty text not null,
+  quiz_type text not null,
+  is_correct boolean not null,
+  time_left integer,
+  session_id text not null
+);
+alter table scores enable row level security;
+create policy "Insert" on scores for insert with check (true);
+create policy "Select" on scores for select using (true);
+```
+
+起動:
+
+```bash
+npm run dev    # http://localhost:3000
+npm run build  # 本番ビルド
+```
+
+Vercelへのデプロイ:
+
+```bash
+vercel --prod
+```
+
+## バージョン履歴
+
+| Version | 内容 |
+| :--- | :--- |
+| v1 | 初期プロジェクト + 麻雀アルゴリズム + 牌表示コンポーネント |
+| v2 | 待ち牌クイズ画面実装、日本語化 |
+| v3-v5 | 牌のビジュアル改善（SVG→OSS画像→外枠・影追加） |
+| v6-v8 | 用語注釈・アルゴリズム解説・aboutページ分離 |
+| v9-v10 | 難易度別制限時間・ヒント・回答後解説表示 |
+| v11-v12 | アクセシビリティ・UD全面改修（ルビ・alt・aria・ビジュアル説明） |
+| v13 | アルゴリズム実装問題を追加 |
+| v14-v17 | ルビ漏れ修正・ヒント時の手牌ハイライト |
+| v18 | アルゴリズム問題の難易度再設計（再認法/再生法） |
+| v19-v22 | Supabase連携・スコア計算改善 |
+| v23-v26 | アルゴリズム問題の再構築・難易度UIボタン・自動ルビ |
+| v27 | レスポンシブ対応 + QRコード生成 |
+| v28 | ルビ・テキストの色コントラスト全面改善 |
+
+## 拡張ロードマップ
+
+- Algorithm Visualizer: 牌のソートアニメーション
+- Probabilistic Simulator: 放銃確率・ツモ期待値のリアルタイム表示
+- AI対局アノテーション: 打牌ログのAI分析
+- 資格試験クイズ連携: 情報I・AP過去問との統合
+- アクセシビリティ・レイヤー: 視線・スイッチ操作対応
+
+## ライセンス
+
+牌画像: CC0 (Public Domain) - FluffyStuff/riichi-mahjong-tiles
